@@ -1,0 +1,21 @@
+{
+  "name": "rest-api-example",
+  "version": "1.0.0",
+  "description": "Simple REST API with Express and TypeScript",
+  "main": "REST-API.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/REST-API.js",
+    "dev": "ts-node REST-API.tsx"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "body-parser": "^1.20.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/node": "^18.15.11",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4"
+  }
+}
