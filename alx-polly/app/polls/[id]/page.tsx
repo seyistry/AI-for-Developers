@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import PollResultChart from '@/components/PollResultChart';
 
 type PollOption = {
   id: string;
@@ -182,7 +183,12 @@ export default function PollDetailPage() {
         </CardFooter>
       </Card>
       
-      <div className="text-center text-sm text-gray-500">
+      <div className="mt-8">
+        <h2 className="text-xl font-semibold mb-4">Results Visualization</h2>
+        <PollResultChart options={poll.options} title={poll.title} />
+      </div>
+
+      <div className="text-center text-sm text-gray-500 mt-4">
         Total votes: {poll.totalVotes}
       </div>
     </div>
