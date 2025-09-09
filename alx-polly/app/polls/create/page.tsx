@@ -63,15 +63,33 @@ export default function CreatePollPage() {
     
     setIsSubmitting(true);
     try {
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const response = await fetch('/api/polls', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title,
+          description,
+          options: validOptions.map(o => ({ text: o.text })),
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create poll');
+      }
       
       // Redirect to polls page after successful creation
       alert('Poll created successfully!');
       router.push('/polls');
     } catch (error) {
       console.error('Failed to create poll:', error);
-      alert('Failed to create poll. Please try again.');
+      if (error instanceof Error) {
+        alert(`Failed to create poll: ${error.message}`);
+      } else {
+        alert('Failed to create poll. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
