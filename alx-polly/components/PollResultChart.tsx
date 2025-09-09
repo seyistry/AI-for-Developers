@@ -40,27 +40,13 @@ const BORDER_COLORS = CHART_COLORS.map(color =>
 
 export default function PollResultChart({ options, title = 'Poll Results' }: PollResultChartProps) {
   const chartRef = useRef<HTMLCanvasElement>(null);
-  
-  // Handle empty data case
-  if (!options || options.length === 0) {
-    return (
-      <div className="w-full max-w-md mx-auto my-6 flex flex-col items-center justify-center p-8 border border-dashed border-gray-300 rounded-lg">
-        <p className="text-gray-500 mb-2">No data available to display</p>
-        <p className="text-sm text-gray-400">Chart will appear when poll options are added</p>
-      </div>
-    );
-  }
-
-  // Check if all votes are zero
-  const totalVotes = options.reduce((sum, option) => sum + option.votes, 0);
-  const hasVotes = totalVotes > 0;
 
   // Prepare data for the chart
   const chartData = {
     labels: options.map(option => option.text),
     datasets: [
       {
-        data: hasVotes ? options.map(option => option.votes) : options.map(() => 1), // Equal segments if no votes
+        data: options.map(option => option.votes),
         backgroundColor: CHART_COLORS.slice(0, options.length),
         borderColor: BORDER_COLORS.slice(0, options.length),
         borderWidth: 1,
@@ -86,17 +72,16 @@ export default function PollResultChart({ options, title = 'Poll Results' }: Pol
         callbacks: {
           label: function(context: any) {
             const label = context.label || '';
-            const value = hasVotes ? (context.raw || 0) : 0;
-            const percentage = hasVotes && totalVotes > 0 ? Math.round((value / totalVotes) * 100) : 0;
-            return hasVotes 
-              ? `${label}: ${value} votes (${percentage}%)`
-              : `${label}: No votes yet`;
+            const value = context.raw || 0;
+            const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
+            const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+            return `${label}: ${value} votes (${percentage}%)`;
           }
         }
       },
       title: {
         display: !!title,
-        text: title + (hasVotes ? '' : ' (No Votes Yet)'),
+        text: title,
         font: {
           size: 16,
         },
@@ -111,11 +96,6 @@ export default function PollResultChart({ options, title = 'Poll Results' }: Pol
   return (
     <div className="w-full max-w-md mx-auto my-6">
       <Pie data={chartData} options={chartOptions} />
-      {!hasVotes && (
-        <div className="text-center mt-2 text-sm text-gray-500">
-          Chart shows equal segments until votes are cast
-        </div>
-      )}
     </div>
   );
 }
