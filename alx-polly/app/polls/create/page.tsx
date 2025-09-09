@@ -1,95 +1,103 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 type PollOption = {
   id: string;
   text: string;
 };
 
+function usePollOptions(initialCount = 2) {
+  const [options, setOptions] = useState<PollOption[]>(
+    Array.from({ length: initialCount }, (_, i) => ({
+      id: `${i + 1}`,
+      text: "",
+    }))
+  );
+
+  const addOption = useCallback(() => {
+    setOptions((opts) => [...opts, { id: `${opts.length + 1}`, text: "" }]);
+  }, []);
+
+  const removeOption = useCallback((id: string) => {
+    setOptions((opts) =>
+      opts.length <= 2 ? opts : opts.filter((option) => option.id !== id)
+    );
+  }, []);
+
+  const changeOption = useCallback((id: string, text: string) => {
+    setOptions((opts) =>
+      opts.map((option) => (option.id === id ? { ...option, text } : option))
+    );
+  }, []);
+
+  return { options, addOption, removeOption, changeOption };
+}
+
+function validatePoll(
+  title: string,
+  description: string,
+  options: PollOption[]
+) {
+  if (!title.trim()) return "Please enter a poll title";
+  if (!description.trim()) return "Please enter a poll description";
+  if (options.filter((option) => option.text.trim() !== "").length < 2)
+    return "Please enter at least 2 options";
+  return null;
+}
+
 export default function CreatePollPage() {
   const router = useRouter();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [options, setOptions] = useState<PollOption[]>([
-    { id: '1', text: '' },
-    { id: '2', text: '' },
-  ]);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const { options, addOption, removeOption, changeOption } = usePollOptions();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleAddOption = () => {
-    setOptions([...options, { id: `${options.length + 1}`, text: '' }]);
-  };
-
-  const handleRemoveOption = (id: string) => {
-    if (options.length <= 2) return; // Minimum 2 options required
-    setOptions(options.filter(option => option.id !== id));
-  };
-
-  const handleOptionChange = (id: string, text: string) => {
-    setOptions(
-      options.map(option => {
-        if (option.id === id) {
-          return { ...option, text };
-        }
-        return option;
-      })
-    );
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate form
-    if (!title.trim()) {
-      alert('Please enter a poll title');
+    const errorMsg = validatePoll(title, description, options);
+    if (errorMsg) {
+      alert(errorMsg);
       return;
     }
-    
-    if (!description.trim()) {
-      alert('Please enter a poll description');
-      return;
-    }
-    
-    const validOptions = options.filter(option => option.text.trim() !== '');
-    if (validOptions.length < 2) {
-      alert('Please enter at least 2 options');
-      return;
-    }
-    
     setIsSubmitting(true);
     try {
-      const response = await fetch('/api/polls', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const validOptions = options.filter(
+        (option) => option.text.trim() !== ""
+      );
+      const response = await fetch("/api/polls", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
           description,
-          options: validOptions.map(o => ({ text: o.text })),
+          options: validOptions.map((o) => ({ text: o.text })),
         }),
       });
-
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create poll');
+        throw new Error(errorData.error || "Failed to create poll");
       }
-      
-      // Redirect to polls page after successful creation
-      alert('Poll created successfully!');
-      router.push('/polls');
+      alert("Poll created successfully!");
+      router.push("/polls");
     } catch (error) {
-      console.error('Failed to create poll:', error);
-      if (error instanceof Error) {
-        alert(`Failed to create poll: ${error.message}`);
-      } else {
-        alert('Failed to create poll. Please try again.');
-      }
+      console.error("Failed to create poll:", error);
+      alert(
+        `Failed to create poll: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -97,14 +105,14 @@ export default function CreatePollPage() {
 
   return (
     <div className="container mx-auto py-8">
-      <Button 
-        variant="outline" 
+      <Button
+        variant="outline"
         className="mb-6"
-        onClick={() => router.push('/polls')}
+        onClick={() => router.push("/polls")}
       >
         Back to Polls
       </Button>
-      
+
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Create New Poll</CardTitle>
@@ -115,7 +123,9 @@ export default function CreatePollPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label htmlFor="title" className="text-sm font-medium">Poll Title</label>
+              <label htmlFor="title" className="text-sm font-medium">
+                Poll Title
+              </label>
               <Input
                 id="title"
                 value={title}
@@ -124,9 +134,11 @@ export default function CreatePollPage() {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
-              <label htmlFor="description" className="text-sm font-medium">Description</label>
+              <label htmlFor="description" className="text-sm font-medium">
+                Description
+              </label>
               <Input
                 id="description"
                 value={description}
@@ -135,25 +147,25 @@ export default function CreatePollPage() {
                 required
               />
             </div>
-            
+
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <label className="text-sm font-medium">Poll Options</label>
-                <Button 
-                  type="button" 
-                  variant="outline" 
+                <Button
+                  type="button"
+                  variant="outline"
                   size="sm"
-                  onClick={handleAddOption}
+                  onClick={addOption}
                 >
                   Add Option
                 </Button>
               </div>
-              
+
               {options.map((option, index) => (
                 <div key={option.id} className="flex items-center gap-2">
                   <Input
                     value={option.text}
-                    onChange={(e) => handleOptionChange(option.id, e.target.value)}
+                    onChange={(e) => changeOption(option.id, e.target.value)}
                     placeholder={`Option ${index + 1}`}
                     required
                   />
@@ -161,7 +173,7 @@ export default function CreatePollPage() {
                     type="button"
                     variant="outline"
                     size="icon"
-                    onClick={() => handleRemoveOption(option.id)}
+                    onClick={() => removeOption(option.id)}
                     disabled={options.length <= 2}
                   >
                     ×
@@ -169,13 +181,9 @@ export default function CreatePollPage() {
                 </div>
               ))}
             </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Creating Poll...' : 'Create Poll'}
+
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? "Creating Poll..." : "Create Poll"}
             </Button>
           </form>
         </CardContent>
