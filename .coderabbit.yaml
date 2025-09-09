@@ -1,0 +1,17 @@
+language: en
+
+reviews:
+  profile: "chill"  # Options: "chill", "assertive"
+
+language: en
+reviews:
+  profile: "chill"  # Options: "chill", "assertive"
+  tools:
+    gitleaks:
+      enabled: true         # secrets scan
+    osvScanner:
+      enabled: true         # dependency vulns
+    semgrep:
+      enabled: true         # SAST
+    checkov:
+      enabled: true         # IaC
